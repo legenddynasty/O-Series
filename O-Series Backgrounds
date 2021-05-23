@@ -1,0 +1,47 @@
+var Hyporion = {
+  id: "Hyporion",
+  obj: "https://starblast.data.neuronality.com/mods/objects/plane.obj",
+  emissive: "https://raw.githubusercontent.com/legenddynasty/BackgroundforSBgame/main/GMNflkSw.png",
+  transparent: true
+};
+
+game.setObject({
+    id: "Hyporion",
+    type:Hyporion,
+    position:{x:0,y:0,z:-40},
+    scale:{x:-35,y:-60,z:-40},
+    rotation:{x:0,y:0,z:0}
+  });
+ 
+ 
+ var Eden = {
+  id: "Eden",
+  obj: "https://starblast.data.neuronality.com/mods/objects/plane.obj",
+  emissive: "https://raw.githubusercontent.com/legenddynasty/BackgroundforSBgame/main/CaEd6G5Q.png",
+  transparent: true
+};
+
+game.setObject({
+    id: "Eden",
+    type:Eden,
+    position:{x:60,y:0,z:-40},
+    scale:{x:-35,y:-60,z:-40},
+    rotation:{x:0,y:0,z:0}
+  });
+ 
+ 
+var Araji = {
+  id: "Araji",
+  obj: "https://starblast.data.neuronality.com/mods/objects/plane.obj",
+  emissive: "https://raw.githubusercontent.com/legenddynasty/BackgroundforSBgame/main/D8Nn18WQ-1.png",
+  transparent: true
+};
+
+game.setObject({
+    id: "Araji",
+    type:Araji,
+    position:{x:-60,y:0,z:-40},
+    scale:{x:40,y:-53,z:-40},
+    rotation:{x:0,y:0,z:0}
+  });
+  
