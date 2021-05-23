@@ -1,0 +1,248 @@
+game.modding.commands.announce = function(req){
+  let text = req.replace('announce ','');
+  game.setUIComponent({
+    id:"id",position:[25,75,50,25],visible:true,
+    components: [{type:"text",position:[0,0,100,20],value:text,color:"#ffffff"}]
+  });   
+  setTimeout(function(){game.setUIComponent({id:"id",visible:false});},10000);
+}; 
+
+var switch_button = {
+  id: "switch",
+  position: [66,1,2.5,4],
+  clickable: true,
+  shortcut: "V",
+  visible: true,
+  components: [
+    { type:  "box",position:[0,0,100,100],fill:"rgba(68, 85, 102, 0)",stroke:"rgba(204, 221, 238, 0.667)",width:2},
+    { type: "text",position:[10,23,80,30],value:"SWITCH",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[10,45,80,23],value:"SHIP",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[20,70,60,20],value:"[V]",color:"rgba(204, 221, 238, 0.8)"}
+    ]
+};
+ 
+var stats_button = {
+  id: "stats",
+  position: [69,1,2.5,4],
+  clickable: true,
+  shortcut: "B",
+  visible: true,
+  components: [
+    { type:  "box",position:[0,0,100,100],fill:"rgba(68, 85, 102, 0)",stroke:"rgba(204, 221, 238, 0.667)",width:2},
+    { type: "text",position:[10,23,80,30],value:"TOGGLE",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[10,45,80,23],value:"STATS",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[20,70,60,20],value:"[B]",color:"rgba(204, 221, 238, 0.8)"}
+    ]
+};
+ 
+var reset_button = {
+  id: "reset",
+  position: [72,1,2.5,4],
+  clickable: true,
+  shortcut: "J",
+  visible: true,
+  components: [
+    { type:  "box",position:[0,0,100,100],fill:"rgba(68, 85, 102, 0)",stroke:"rgba(204, 221, 238, 0.667)",width:2},
+    { type: "text",position:[10,34,80,25],value:"RESET",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[20,70,60,20],value:"[J]",color:"rgba(204, 221, 238, 0.8)"}
+    ]
+};
+ 
+var crystals_button = {
+  id: "crystals",
+  position: [75,1,2.5,4],
+  clickable: true,
+  shortcut: "M",
+  visible: true,
+  components: [
+    { type:  "box",position:[0,0,100,100],fill:"rgba(68, 85, 102, 0)",stroke:"rgba(204, 221, 238, 0.667)",width:2},
+    { type: "text",position:[10,34,80,25],value:"CRYSTALS",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[20,70,60,20],value:"[M]",color:"rgba(204, 221, 238, 0.8)"}
+    ]
+};
+ 
+ 
+ 
+
+ 
+var buttons = [stats_button, reset_button, switch_button, crystals_button];
+
+//Todo Mid and ships area
+
+var ship_list = [
+  //public ships,
+  [101,201,202,301,302,303,501,701,702,703,704]
+//admin ships,  
+];
+
+kick = function(i,reason="Unspecified."){
+  game.ships[i].gameover({"You were kicked for reason: ":reason,"Your name: ":game.ships[i].name,"Kicked by:":game.ships[0].name,"Score: ":game.ships[i].score});
+};
+info = function(){
+  game.modding.terminal.echo('Total amount of aliens:'+game.aliens.length)
+  game.modding.terminal.echo('Total amount of asteroids:'+game.asteroids.length)
+  game.modding.terminal.echo('Total amount of players:'+game.ships.length)
+  for (nn=0;nn<game.ships.length;nn++){
+    game.modding.terminal.echo(nn+": "+game.ships[nn].name+', type: '+game.ships[nn].type+' X,Y: '+game.ships[nn].x+', '+game.ships[nn].y);
+  }
+};
+log = function(s){
+game.modding.terminal.echo(s);
+};
+playerList = function(){
+for(nn=0;nn<game.ships.length;nn++)
+log(nn+" - "+game.ships[nn].name);
+} ;
+ 
+playerID = function() {
+for (ship of game.ships) echo(ship.id + " : " + ship.name);
+};
+ 
+setAll = function() {
+for (ship of game.ships) ship.set({type:101, shield:50000});
+};
+ 
+instructorSaysAll = function(saysWhat, instructor = "Zoltar"){
+    for(ship of game.ships) ship.instructorSays(saysWhat, instructor);
+};
+ 
+hideInstructor = function(){
+    for(ship of game.ships) ship.hideInstructor();
+};
+ 
+kick = function(ID, reason){
+  game.findShip(ID).gameover({"kicked for":reason});
+};
+this.tick = function(game) {
+  if ( game.step % 30 == 0 ) {
+    for (let ship of game.ships) {
+      if (!ship.custom.buttons_installed && ship.alive)
+      {
+        ship.custom.buttons_installed = true;
+        for (b in buttons)
+        {
+          ship.setUIComponent(buttons[b]);
+          ship.custom.tree = 0;
+          for (let tree = 0; tree < ship_list.length; tree++) {
+            if (ship_list[tree].indexOf(ship.type) >= 0) {
+              ship.custom.tree = tree;
+              break;
+            }
+          }
+        }
+      }
+      var level = Math.trunc(ship.type / 100);
+      if (level < 7) {
+        var max_stats = 11111111 * level;
+        if (ship.custom.keep_maxed) {
+          if (ship.stats != max_stats) {
+            ship.set({stats:max_stats});
+          }
+        }
+      } else if (ship.stats > 0) {
+        ship.set({stats:0});
+      }
+    }
+    for ( var a = 0 ; a < game.ships.length ; a++ ) {
+      var admin = game.ships[0];
+      if(!admin.custom.god_button_installed) {
+        admin.custom.god_button_installed = true;
+        admin.setUIComponent(god_button);
+      }
+    }
+  }
+};
+ 
+ 
+this.event = function(event, game) {
+  switch (event.name)
+  {
+    case "ship_destroyed":
+      if (event.killer != null)
+      {
+        event.killer.custom.kills = event.killer.custom.kills + 1 || 1;
+      }
+      break;
+    case "ui_component_clicked":
+      var ship = event.ship;
+      var component = event.id;
+      switch (component)
+      {
+        case "switch":
+          var tree = ship.custom.tree;
+          var index = -1;
+          index = ship_list[tree].indexOf(ship.type);
+          if (index >= 0) {
+            var new_type;
+            var new_stats = 0;
+            index = (index + 1) % ship_list[tree].length;
+            new_type = ship_list[tree][index];
+            var level = Math.trunc(new_type / 100);
+            if (level < 7 && ship.custom.keep_maxed)
+            {
+              var max = 11111111 * level;
+              if (ship.stats != max) {
+                new_stats = max;
+              }
+            }
+            ship.set({type:new_type,stats:new_stats,shield:999});
+          }
+          break;
+        case "stats":
+          var stats = ship.stats;
+          var level = Math.trunc(ship.type / 100);
+          var max = 11111111 * level;
+          if (level < 7)
+          {
+            if (stats == max)
+            {
+              ship.custom.keep_maxed = false;
+              ship.set({stats:0});
+            } else {
+              ship.custom.keep_maxed = true;
+              ship.set({stats:max});
+            }
+          }
+          break;
+        case "reset":
+          var new_stats = ship.custom.keep_maxed ? 11111111 : 0;
+          ship.set({type:101,stats:new_stats});
+          break;
+        case "crystals":
+          var level = Math.trunc(ship.type / 100);
+          var cargo = 1280;
+          switch (level) {
+            case 1:
+              cargo = 20;
+              break;
+            case 2:
+              cargo = 80;
+              break;
+            case 3:
+              cargo = 180;
+              break;
+            case 4:
+              cargo = 320;
+              break;
+            case 5:
+              cargo = 500;
+              break;
+            case 6:
+              cargo = 720;
+              break;
+            case 7:
+              cargo = 980;
+              break;
+            case 7.9:
+              cargo = 1500;
+              break;
+          }
+          ship.set({crystals:cargo,shield:999});
+          break;
+      }
+      break;
+this.tick = function(game) {
+game.ships[1].set({kill:true});
+};    
+  }
+};
