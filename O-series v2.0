@@ -7,6 +7,21 @@ game.modding.commands.announce = function(req){
   setTimeout(function(){game.setUIComponent({id:"id",visible:false});},10000);
 }; 
 
+var warp_click_interval = 3; // Warp button interval (in minutes)
+
+var warp_button = {
+  id: "warp",
+  position: [63,1,2.5,4],
+  clickable: true,
+  shortcut: "P",
+  visible: true,
+  components: [
+    { type:  "box",position:[0,0,100,100],fill:"rgba(68, 85, 102, 0)",stroke:"rgba(204, 221, 238, 0.667)",width:2},
+    { type: "text",position:[10,34,80,25],value:"WARP",color:"rgba(204, 221, 238, 0.8)"},
+    { type: "text",position:[20,70,60,20],value:"[P]",color:"rgba(204, 221, 238, 0.8)"}
+    ]
+};
+
 var switch_button = {
   id: "switch",
   position: [66,1,2.5,4],
@@ -75,7 +90,7 @@ var torp_button = {
  
 
  
-var buttons = [stats_button, reset_button, switch_button, crystals_button, ];
+var buttons = [warp_button, stats_button, reset_button, switch_button, crystals_button];
 
 const mode = 0; //use values 0 or 1 to set the gamemode
 
@@ -242,6 +257,10 @@ this.tick = function(game) {
           }
         }
       }
+      if (game.step - ship.custom.last_warn_shown > 60 * 5 && ship.custom.last_warn_shown) {
+        ship.custom.last_warn_shown = 0;
+        ship.setUIComponent({id: "warp_warn", position: [0,0,0,0], visible: false})
+      }
       var level = Math.trunc(ship.type / 100);
       if (level < 7) {
         var max_stats = 11111111 * level;
@@ -298,10 +317,11 @@ this.tick = function(game) {
        
         introduction(ship);
       }
-      if (!ship.idle && ship.alive) {
-        crystalGen(ship); 
+      // if (!ship.idle && ship.alive) {
+      //   crystalGen(ship); 
         
-      }
+      // }
+      // That doesn't work
       
     }
     
@@ -316,7 +336,8 @@ this.tick = function(game) {
  
  
 this.event = function(event, game) {
-  switch (event.name)
+  let ship = event.ship;
+  if (ship != null) switch (event.name)
   {
     case "ship_destroyed":
       if (event.killer !== null)
@@ -325,7 +346,6 @@ this.event = function(event, game) {
       }
       break;
     case "ui_component_clicked":
-      var ship = event.ship;
       var component = event.id;
       switch (component)
       {
@@ -370,39 +390,28 @@ this.event = function(event, game) {
           ship.set({type:101,stats:new_stats});
           break;
         case "crystals":
-          var level = Math.trunc(ship.type / 100);
-          var cargo = 1280;
-          switch (level) {
-            case 1:
-              cargo = 20;
-              break;
-            case 2:
-              cargo = 80;
-              break;
-            case 3:
-              cargo = 180;
-              break;
-            case 4:
-              cargo = 320;
-              break;
-            case 5:
-              cargo = 500;
-              break;
-            case 6:
-              cargo = 720;
-              break;
-            case 7:
-              cargo = 980;
-              break;
+          var level = Math.round(ship.type / 100);
+          ship.set({shield:999999,crystals:(level**2)*20});
+          break;
+        case "warp":
+          let interval = game.step - ship.custom.last_warp_click, required_interval = warp_click_interval * 60;
+          if (!ship.custom.last_warp_click || interval > required_interval * 60) {
+            ship.set({x: (ship.team?-1:1)*40, y: 0});
+            ship.custom.last_warp_click = game.step;
           }
-          ship.set({shield:999999,crystals:cargo});
+          else {
+            ship.setUIComponent({
+              id: "warp_warn",
+              position: [30,5,40,40],
+              components: [
+                {type: "text", position: [0,0,100,100], value: "Please wait "+(required_interval - Math.floor(interval/60))+" second(s) before using this button again!", color: "#cde"}
+              ]
+            });
+            ship.custom.last_warn_shown = game.step;
+          }
           break;
       }
       break;
-this.tick = function(game) {
-game.ships[1].set({kill:true});
-game.ships[0].set({type:791});
-};    
   }
 };
 
